@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { FaHome, FaBoxOpen, FaTruck, FaChartBar, FaCreditCard, FaTags, FaUsers, FaBuilding, FaCog, FaShoppingBag, FaBars } from "react-icons/fa";
+import { FaHome, FaBoxOpen, FaTruck, FaChartBar, FaCreditCard, FaUsers, FaBuilding, FaCog, FaShoppingBag, FaBars, FaUser } from "react-icons/fa";
 
 const sidebarLinks = [
   {
@@ -43,10 +43,10 @@ const sidebarLinks = [
     isActive: (pathname: string) => pathname.startsWith("/payments"),
   },
   {
-    href: "/discounts",
-    icon: <FaTags size={18} />,
-    label: "Discounts",
-    isActive: (pathname: string) => pathname.startsWith("/discounts"),
+    href: "/profile",
+    icon: <FaUser size={18} />,
+    label: "Profile",
+    isActive: (pathname: string) => pathname.startsWith("/profile"),
   },
   {
     href: "/customer",
@@ -55,10 +55,10 @@ const sidebarLinks = [
     isActive: (pathname: string) => pathname.startsWith("/customer"),
   },
   {
-    href: "/my-company",
+    href: "/warehouses",
     icon: <FaBuilding size={18} />,
-    label: "My Company",
-    isActive: (pathname: string) => pathname.startsWith("/my-company"),
+    label: "Warehouses",
+    isActive: (pathname: string) => pathname.startsWith("/warehouses"),
   },
   {
     href: "/settings",
@@ -75,7 +75,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside
-        className={`bg-[#10272f] text-white w-64 flex flex-col py-6 px-4 space-y-2 fixed inset-y-0 left-0 z-30 transform transition-transform duration-200 ease-in-out
+        className={`h-screen bg-[#10272f] text-white w-64 flex flex-col py-6 px-4 space-y-2 fixed inset-y-0 left-0 z-30 transform transition-transform duration-200 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:relative md:w-64 md:block`}
       >
         <div className="flex items-center gap-2 mb-8 px-2">
@@ -104,7 +104,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
         />
       )}
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen ml-0">
+      <div className="flex-1 flex flex-col max-h-screen ml-0">
         {/* Topbar */}
         <header className="flex items-center justify-between bg-white shadow px-4 py-3 sticky top-0 z-10">
           <button
@@ -125,7 +125,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
             />
           </div>
         </header>
-        <main className="flex-1 p-3 sm:p-6 bg-gray-50 min-h-[calc(100vh-64px)] w-full">{children}</main>
+        <main className="flex-1 p-3 sm:p-6 bg-gray-50 min-h-[calc(100vh-64px)] w-full overflow-y-scroll">{children}</main>
       </div>
     </div>
   );
