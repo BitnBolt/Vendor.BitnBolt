@@ -45,6 +45,13 @@ export default function ProfilePage() {
   const [message, setMessage] = useState({ type: '', content: '' });
   const [imageUploading, setImageUploading] = useState(false);
   const [, setImagePreview] = useState<string | null>(null);
+  
+  // Verification states
+  const [emailVerifying, setEmailVerifying] = useState(false);
+  const [phoneVerifying, setPhoneVerifying] = useState(false);
+  const [showPhoneOTPModal, setShowPhoneOTPModal] = useState(false);
+  const [phoneOTP, setPhoneOTP] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -212,6 +219,119 @@ export default function ProfilePage() {
   const handleLogout = () => {
     localStorage.removeItem('vendorToken');
     router.push('/auth/signin');
+  };
+
+  // Email verification function
+  const handleEmailVerification = async () => {
+    setEmailVerifying(true);
+    setMessage({ type: '', content: '' });
+
+    try {
+      const token = localStorage.getItem('vendorToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/varify-email/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: vendor?.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', content: 'Verification email sent! Please check your inbox.' });
+      } else {
+        setMessage({ type: 'error', content: data.message || 'Failed to send verification email' });
+      }
+    } catch {
+      setMessage({ type: 'error', content: 'An error occurred while sending verification email' });
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  // Phone verification functions
+  const handleSendPhoneOTP = async () => {
+    setOtpSending(true);
+    setMessage({ type: '', content: '' });
+
+    try {
+      const token = localStorage.getItem('vendorToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/varify-phone/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone: vendor?.phone }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', content: 'OTP sent to your phone number!' });
+        setShowPhoneOTPModal(true);
+      } else {
+        setMessage({ type: 'error', content: data.message || 'Failed to send OTP' });
+      }
+    } catch {
+      setMessage({ type: 'error', content: 'An error occurred while sending OTP' });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyPhoneOTP = async () => {
+    if (!phoneOTP.trim()) {
+      setMessage({ type: 'error', content: 'Please enter the OTP' });
+      return;
+    }
+
+    setPhoneVerifying(true);
+    setMessage({ type: '', content: '' });
+
+    try {
+      const token = localStorage.getItem('vendorToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/varify-phone/varify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone: vendor?.phone, otp: phoneOTP }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', content: 'Phone number verified successfully!' });
+        setShowPhoneOTPModal(false);
+        setPhoneOTP('');
+        // Refresh vendor data
+        const sessionResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/session`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (sessionResponse.ok) {
+          const sessionData = await sessionResponse.json();
+          setVendor(sessionData.data.vendor);
+        }
+      } else {
+        setMessage({ type: 'error', content: data.message || 'Failed to verify OTP' });
+      }
+    } catch {
+      setMessage({ type: 'error', content: 'An error occurred while verifying OTP' });
+    } finally {
+      setPhoneVerifying(false);
+    }
+  };
+
+  const closePhoneOTPModal = () => {
+    setShowPhoneOTPModal(false);
+    setPhoneOTP('');
+    setMessage({ type: '', content: '' });
   };
 
   if (isLoading) {
@@ -383,24 +503,42 @@ export default function ProfilePage() {
                   ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
                   : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200'
               }`}>
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    vendor.emailVerified ? 'bg-green-100' : 'bg-yellow-100'
-                  }`}>
-                    {vendor.emailVerified ? (
-                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      vendor.emailVerified ? 'bg-green-100' : 'bg-yellow-100'
+                    }`}>
+                      {vendor.emailVerified ? (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold">Email</p>
+                      <p className="text-sm">{vendor.emailVerified ? 'Verified' : 'Pending'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">Email</p>
-                    <p className="text-sm">{vendor.emailVerified ? 'Verified' : 'Pending'}</p>
-                  </div>
+                  {!vendor.emailVerified && (
+                    <button
+                      onClick={handleEmailVerification}
+                      disabled={emailVerifying}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {emailVerifying ? (
+                        <div className="flex items-center space-x-1">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                          <span>Sending...</span>
+                        </div>
+                      ) : (
+                        'Verify'
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -409,24 +547,42 @@ export default function ProfilePage() {
                   ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
                   : 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200'
               }`}>
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    vendor.phoneVerified ? 'bg-green-100' : 'bg-yellow-100'
-                  }`}>
-                    {vendor.phoneVerified ? (
-                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      vendor.phoneVerified ? 'bg-green-100' : 'bg-yellow-100'
+                    }`}>
+                      {vendor.phoneVerified ? (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold">Phone</p>
+                      <p className="text-sm">{vendor.phoneVerified ? 'Verified' : 'Pending'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">Phone</p>
-                    <p className="text-sm">{vendor.phoneVerified ? 'Verified' : 'Pending'}</p>
-                  </div>
+                  {!vendor.phoneVerified && (
+                    <button
+                      onClick={handleSendPhoneOTP}
+                      disabled={otpSending}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {otpSending ? (
+                        <div className="flex items-center space-x-1">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                          <span>Sending...</span>
+                        </div>
+                      ) : (
+                        'Verify'
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -633,6 +789,72 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Phone OTP Verification Modal */}
+      {showPhoneOTPModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Verify Phone Number</h3>
+              <p className="text-gray-600">Enter the OTP sent to {vendor?.phone}</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  OTP Code
+                </label>
+                <input
+                  type="text"
+                  value={phoneOTP}
+                  onChange={(e) => setPhoneOTP(e.target.value)}
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-center text-lg font-mono"
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleVerifyPhoneOTP}
+                  disabled={phoneVerifying || !phoneOTP.trim()}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-all duration-200"
+                >
+                  {phoneVerifying ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Verifying...</span>
+                    </div>
+                  ) : (
+                    'Verify OTP'
+                  )}
+                </button>
+                <button
+                  onClick={closePhoneOTPModal}
+                  className="px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={handleSendPhoneOTP}
+                  disabled={otpSending}
+                  className="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors duration-200"
+                >
+                  {otpSending ? 'Sending...' : 'Resend OTP'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
