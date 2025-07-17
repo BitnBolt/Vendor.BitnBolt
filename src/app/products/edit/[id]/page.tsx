@@ -73,14 +73,15 @@ export default function EditProductPage() {
             router.push('/auth/signin');
             return;
           }
-          throw new Error('Failed to fetch product');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch product');
         }
 
         const data = await response.json();
         setFormData(data.product);
       } catch (error) {
         console.error('Error fetching product:', error);
-        toast.error('Failed to load product details');
+        toast.error(error instanceof Error ? error.message : 'Failed to load product details');
       } finally {
         setIsLoading(false);
       }
@@ -149,6 +150,7 @@ export default function EditProductPage() {
 
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('productId', params.id as string);
 
       const token = localStorage.getItem('vendorToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/products/upload-image`, {
@@ -160,16 +162,21 @@ export default function EditProductPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to upload image');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
       }
 
-      const { data: { url } } = await response.json();
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, url],
-      }));
-      toast.success('Image uploaded successfully');
+      const result = await response.json();
+      
+      if (result.success && result.data && result.data.imageUrl) {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, result.data.imageUrl],
+        }));
+        toast.success('Image uploaded successfully');
+      } else {
+        throw new Error(result.message || 'Failed to upload image');
+      }
     } catch (error) {
       console.error('Image upload error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload image');
@@ -195,14 +202,15 @@ export default function EditProductPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete product');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete product');
       }
 
       toast.success('Product deleted successfully');
       router.push('/products');
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete product');
     } finally {
       setIsSubmitting(false);
     }
@@ -310,6 +318,8 @@ export default function EditProductPage() {
           errors={errors}
           handleImageUpload={handleImageUpload}
           isUploading={isUploading}
+          isEditing={true}
+          productId={params.id as string}
         />
       </div>
 

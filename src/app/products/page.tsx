@@ -289,117 +289,114 @@ export default function ProductsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {products.map((product) => (
               <div
                 key={product._id}
-                className="bg-white rounded-xl shadow-lg overflow-hidden"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100 group"
               >
-                <div className="relative h-48">
+                <div className="relative h-40 overflow-hidden">
                   <Image
                     src={product.images[0] || '/placeholder.png'}
                     alt={product.name}
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                </div>
-                
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                    {product.name}
-                  </h2>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm text-gray-600">{product.category}</p>
-                      {product.subCategory && (
-                        <p className="text-sm text-gray-500">{product.subCategory}</p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500 line-through">₹{product.basePrice}</p>
-                      <p className="text-lg font-bold text-indigo-600">₹{product.finalPrice}</p>
-                      {product.discount > 0 && (
-                        <p className="text-sm text-green-600">-{product.discount}% off</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div>
-                      <p className="text-gray-600">Stock</p>
-                      <p className="font-semibold">{product.stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Min. Order</p>
-                      <p className="font-semibold">{product.minimumOrderQuantity}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Views</p>
-                      <p className="font-semibold">{product.stats.views}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Sales</p>
-                      <p className="font-semibold">{product.stats.sales}</p>
-                    </div>
-                  </div>
-
-                  {product.isSuspended && (
-                    <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm text-red-600">
-                        Suspended: {product.suspensionReason || 'Contact support'}
-                      </p>
+                  {product.discount > 0 && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      -{product.discount}%
                     </div>
                   )}
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">
-                        {product.isPublished ? 'Published' : 'Draft'}
-                      </span>
-                      <Switch
-                        checked={product.isPublished}
-                        onChange={() => handleTogglePublish(product._id, product.isPublished)}
-                        disabled={product.isSuspended}
-                        className={`${
-                          product.isPublished ? 'bg-green-600' : 'bg-gray-200'
-                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50`}
-                      >
-                        <span
-                          className={`${
-                            product.isPublished ? 'translate-x-6' : 'translate-x-1'
-                          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                        />
-                      </Switch>
+                  {product.isSuspended && (
+                    <div className="absolute top-0 left-0 w-full bg-red-500 text-white text-xs py-1 text-center">
+                      Suspended
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600">Rating:</span>
-                      <span className="font-semibold">{product.rating.average.toFixed(1)}</span>
-                      <span className="text-sm text-gray-600">({product.rating.count})</span>
+                  )}
+                </div>
+                
+                <div className="p-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="text-base font-semibold text-gray-800 line-clamp-1">
+                      {product.name}
+                    </h2>
+                    <Switch
+                      checked={product.isPublished}
+                      onChange={() => handleTogglePublish(product._id, product.isPublished)}
+                      disabled={product.isSuspended}
+                      className={`${
+                        product.isPublished ? 'bg-green-500' : 'bg-gray-200'
+                      } relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:opacity-50`}
+                    >
+                      <span
+                        className={`${
+                          product.isPublished ? 'translate-x-5' : 'translate-x-1'
+                        } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
+                      />
+                    </Switch>
+                  </div>
+                  
+                  <div className="flex items-center text-xs text-gray-500 mb-2">
+                    <span className="bg-gray-100 px-2 py-0.5 rounded-full">{product.category}</span>
+                    {product.subCategory && (
+                      <span className="ml-1 bg-gray-100 px-2 py-0.5 rounded-full">{product.subCategory}</span>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="ml-1 font-medium">{product.rating.average.toFixed(1)}</span>
+                      <span className="ml-1 text-gray-400">({product.rating.count})</span>
+                    </div>
+                    <div>
+                      {/* <span className="text-xs text-gray-400 line-through">₹{product.basePrice}</span> */}
+                      <span className="ml-1 font-bold text-indigo-600">₹{product.basePrice}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-4 gap-1 mb-3">
+                    <div className="text-center bg-gray-50 rounded p-1">
+                      <p className="text-xs text-gray-500">Stock</p>
+                      <p className="text-xs font-semibold">{product.stock}</p>
+                    </div>
+                    <div className="text-center bg-gray-50 rounded p-1">
+                      <p className="text-xs text-gray-500">Min</p>
+                      <p className="text-xs font-semibold">{product.minimumOrderQuantity}</p>
+                    </div>
+                    <div className="text-center bg-gray-50 rounded p-1">
+                      <p className="text-xs text-gray-500">Views</p>
+                      <p className="text-xs font-semibold">{product.stats.views}</p>
+                    </div>
+                    <div className="text-center bg-gray-50 rounded p-1">
+                      <p className="text-xs text-gray-500">Sales</p>
+                      <p className="text-xs font-semibold">{product.stats.sales}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-1">
                     <button
                       onClick={() => router.push(`/products/${product._id}`)}
-                      className="flex-1 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+                      className="flex-1 px-2 py-1.5 text-xs bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                     >
                       View
                     </button>
                     <button
                       onClick={() => router.push(`/products/edit/${product._id}`)}
-                      className="flex-1 px-3 py-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200"
+                      className="flex-1 px-2 py-1.5 text-xs bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors"
                       disabled={product.isSuspended}
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(product._id)}
-                      className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                      className="px-2 py-1.5 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
                       disabled={product.isSuspended}
+                      aria-label="Delete product"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"

@@ -45,6 +45,7 @@ export default function AddProductPage() {
   const [formData, setFormData] = useState<ProductFormData>(defaultFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<ProductFormErrors>({});
+  const [isUploading, setIsUploading] = useState(false);
 
   const validateStep = (step: number): boolean => {
     const newErrors: ProductFormErrors = {};
@@ -99,12 +100,67 @@ export default function AddProductPage() {
     setCurrentStep(prev => prev - 1);
   };
 
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    try {
+      setIsUploading(true);
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const token = localStorage.getItem('vendorToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/products/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.data && result.data.imageUrl) {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, result.data.imageUrl],
+        }));
+        toast.success('Image uploaded successfully');
+      } else {
+        throw new Error(result.message || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) {
       return;
     }
 
     try {
+      // Clean up the data before sending
+      const cleanedFormData = {
+        ...formData,
+        whatsInTheBox: formData.whatsInTheBox.filter(item => item.trim()),
+        aboutItem: formData.aboutItem.filter(item => item.trim()),
+        features: formData.features.filter(f => f.key.trim() && f.value.trim()),
+        specifications: formData.specifications.filter(s => s.key.trim() && s.value.trim()),
+        tags: formData.tags.filter(tag => tag.trim()),
+        returnPolicy: {
+          ...formData.returnPolicy,
+          returnConditions: formData.returnPolicy.returnConditions.filter(c => c.trim()),
+        },
+      };
+
       const token = localStorage.getItem('vendorToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/products/create`, {
         method: 'POST',
@@ -112,18 +168,19 @@ export default function AddProductPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanedFormData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create product');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create product');
       }
 
       toast.success('Product created successfully');
       router.push('/products');
     } catch (error) {
       console.error('Error creating product:', error);
-      toast.error('Failed to create product');
+      toast.error(error instanceof Error ? error.message : 'Failed to create product');
     }
   };
 
@@ -141,6 +198,8 @@ export default function AddProductPage() {
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
           errors={errors}
+          handleImageUpload={handleImageUpload}
+          isUploading={isUploading}
         />
 
         <div className="flex justify-between mt-8">
