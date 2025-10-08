@@ -1,6 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../hooks/useAuth';
@@ -67,7 +66,6 @@ type Order = {
 };
 
 export default function OrdersPage() {
-  const router = useRouter();
   const { isAuthenticated, loading: authLoading, makeAuthenticatedRequest } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,48 +74,48 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Fetch orders
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchOrders();
-    }
-  }, [isAuthenticated, currentPage, filterStatus]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
       });
-      
+
       if (filterStatus) {
         params.append('status', filterStatus);
       }
 
       const res = await makeAuthenticatedRequest(`/api/vendor/orders?${params}`);
-      
+
       if (!res.ok) {
         throw new Error('Failed to load orders');
       }
-      
+
       const data = await res.json();
       setOrders(data.orders || []);
       setTotalPages(data.pagination?.pages || 1);
-    } catch (e: any) {
-      setError(e?.message || 'Something went wrong');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filterStatus, makeAuthenticatedRequest]);
+  // Fetch orders
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isAuthenticated, currentPage, filterStatus, fetchOrders]);
+
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const res = await makeAuthenticatedRequest(`/api/vendor/orders/${orderId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: newStatus,
           comment: `Status updated to ${newStatus}`
         }),
@@ -130,8 +128,8 @@ export default function OrdersPage() {
 
       // Refresh orders
       await fetchOrders();
-    } catch (e: any) {
-      setError(e?.message || 'Failed to update order status');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to update order status');
     }
   };
 
@@ -160,7 +158,7 @@ export default function OrdersPage() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Orders</h1>
-        
+
         <div className="flex gap-4">
           <select
             value={filterStatus}
@@ -215,7 +213,7 @@ export default function OrdersPage() {
                   <p className="text-sm text-gray-500">{order.userId.email}</p>
                   <p className="text-sm text-gray-500">{order.userId.phoneNumber}</p>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">Shipping Address</h4>
                   <p className="text-sm">{order.shippingAddress.fullName}</p>
@@ -253,7 +251,7 @@ export default function OrdersPage() {
                   <p className="text-sm text-gray-500">Payment: {order.paymentDetails.method.toUpperCase()}</p>
                   <p className="text-sm text-gray-500">Total: ₹{order.orderSummary.totalAmount.toFixed(2)}</p>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Link
                     href={`/orders/${order.orderId}`}
@@ -261,7 +259,7 @@ export default function OrdersPage() {
                   >
                     View Details
                   </Link>
-                  
+
                   {order.status === 'confirmed' && (
                     <button
                       onClick={() => updateOrderStatus(order.orderId, 'processing')}
@@ -270,7 +268,7 @@ export default function OrdersPage() {
                       Start Processing
                     </button>
                   )}
-                  
+
                   {order.status === 'processing' && (
                     <button
                       onClick={() => updateOrderStatus(order.orderId, 'shipped')}
@@ -294,11 +292,11 @@ export default function OrdersPage() {
               >
                 Previous
               </button>
-              
+
               <span className="px-4 py-2">
                 Page {currentPage} of {totalPages}
               </span>
-              
+
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}

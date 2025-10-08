@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
@@ -112,11 +112,24 @@ export default function OrderDetailPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [creatingShipment, setCreatingShipment] = useState(false);
   const [generatingAWB, setGeneratingAWB] = useState(false);
-  const [availableCouriers, setAvailableCouriers] = useState<any[]>([]);
+  const [availableCouriers, setAvailableCouriers] = useState<Array<{
+    courierId: number;
+    courierName: string;
+    rate: number;
+    estimatedDays: number;
+    isRecommended: boolean;
+  }>>([]);
   const [selectedCourier, setSelectedCourier] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentVendorId, setCurrentVendorId] = useState<string>('');
-  const [documents, setDocuments] = useState<any>(null);
+  const [documents, setDocuments] = useState<{
+    documents: {
+      label?: { url: string };
+      invoice?: { url: string };
+      awb?: { code: string; trackUrl: string };
+      manifest?: { url: string };
+    };
+  } | null>(null);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
 
   // Check authentication
@@ -138,22 +151,15 @@ export default function OrderDetailPage() {
 
   // Check if this vendor has a shipment
   const hasVendorShipment = order?.deliveryDetails?.vendorShipments?.some(
-    (shipment: any) => String(shipment.vendorId) === String(currentVendorId)
+    (shipment: { vendorId: string }) => String(shipment.vendorId) === String(currentVendorId)
   );
 
   // Get current vendor's shipment
   const currentVendorShipment = order?.deliveryDetails?.vendorShipments?.find(
-    (shipment: any) => String(shipment.vendorId) === String(currentVendorId)
+    (shipment: { vendorId: string }) => String(shipment.vendorId) === String(currentVendorId)
   );
 
-  // Fetch order details
-  useEffect(() => {
-    if (isAuthenticated && orderId) {
-      fetchOrderDetails();
-    }
-  }, [isAuthenticated, orderId]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -181,12 +187,19 @@ export default function OrderDetailPage() {
       
       const data = await res.json();
       setOrder(data.order);
-    } catch (e: any) {
-      setError(e?.message || 'Something went wrong');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, router]);
+  // Fetch order details
+  useEffect(() => {
+    if (isAuthenticated && orderId) {
+      fetchOrderDetails();
+    }
+  }, [isAuthenticated, orderId, fetchOrderDetails]);
+
 
   const updateOrderStatus = async (newStatus: string) => {
     try {
@@ -224,8 +237,8 @@ export default function OrderDetailPage() {
 
       // Refresh order details
       await fetchOrderDetails();
-    } catch (e: any) {
-      setError(e?.message || 'Failed to update order status');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to update order status');
     } finally {
       setUpdatingStatus(false);
     }
@@ -267,8 +280,8 @@ export default function OrderDetailPage() {
       
       // Show success message
       alert(`Shiprocket shipment created successfully! Shipment ID: ${data.shipmentId}`);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to create Shiprocket shipment');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create Shiprocket shipment');
     } finally {
       setCreatingShipment(false);
     }
@@ -303,15 +316,15 @@ export default function OrderDetailPage() {
       
       // Auto-select recommended courier
       if (data.couriers && data.couriers.length > 0) {
-        const recommended = data.couriers.find((c: any) => c.isRecommended);
+        const recommended = data.couriers.find((c: { isRecommended: boolean }) => c.isRecommended);
         if (recommended) {
           setSelectedCourier(recommended.courierId.toString());
         } else {
           setSelectedCourier(data.couriers[0].courierId.toString());
         }
       }
-    } catch (e: any) {
-      setError(e?.message || 'Failed to fetch available couriers');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to fetch available couriers');
     }
   };
 
@@ -357,8 +370,8 @@ export default function OrderDetailPage() {
       
       // Show success message
       alert(`AWB generated successfully! AWB Code: ${data.awbCode}\nCourier: ${data.courierName}\nTrack URL: ${data.trackUrl}`);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to generate AWB');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to generate AWB');
     } finally {
       setGeneratingAWB(false);
     }
@@ -393,8 +406,8 @@ export default function OrderDetailPage() {
 
       const data = await res.json();
       setDocuments(data);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to fetch documents');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to fetch documents');
     } finally {
       setLoadingDocuments(false);
     }

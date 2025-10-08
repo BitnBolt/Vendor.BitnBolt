@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { ProductFormData, ProductFormErrors } from './types';
 
@@ -20,15 +19,11 @@ export default function ProductFormSteps({
   formData,
   setFormData,
   currentStep,
-  setCurrentStep,
   isEditing,
   productId,
   errors,
   handleImageUpload: externalHandleImageUpload,
-  isUploading: externalIsUploading
-}: StepsProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  }: StepsProps) {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
@@ -101,182 +96,182 @@ export default function ProductFormSteps({
     }
   };
 
-  const handleImageDelete = async (index: number) => {
-    if (!isEditing || !productId) {
-      // For new products, just remove from state
-      const newImages = formData.images.filter((_, i) => i !== index);
-      setFormData({ ...formData, images: newImages });
-      return;
-    }
+  // const handleImageDelete = async (index: number) => {
+  //   if (!isEditing || !productId) {
+  //     // For new products, just remove from state
+  //     const newImages = formData.images.filter((_, i) => i !== index);
+  //     setFormData({ ...formData, images: newImages });
+  //     return;
+  //   }
 
-    try {
-      setUploadingImage(true);
-      const token = localStorage.getItem('vendorToken');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/products/upload-image?productId=${productId}&imageIndex=${index}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+  //   try {
+  //     setUploadingImage(true);
+  //     const token = localStorage.getItem('vendorToken');
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/vendor/products/upload-image?productId=${productId}&imageIndex=${index}`,
+  //       {
+  //         method: 'DELETE',
+  //         headers: {
+  //           'Authorization': `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete image');
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || 'Failed to delete image');
+  //     }
 
-      const newImages = formData.images.filter((_, i) => i !== index);
-      setFormData({ ...formData, images: newImages });
-      toast.success('Image deleted successfully');
-    } catch (error) {
-      console.error('Image delete error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete image');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
+  //     const newImages = formData.images.filter((_, i) => i !== index);
+  //     setFormData({ ...formData, images: newImages });
+  //     toast.success('Image deleted successfully');
+  //   } catch (error) {
+  //     console.error('Image delete error:', error);
+  //     toast.error(error instanceof Error ? error.message : 'Failed to delete image');
+  //   } finally {
+  //     setUploadingImage(false);
+  //   }
+  // };
 
-  const renderBasicInfoStep = () => (
-    <div className="space-y-6">
-        <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Product Name *
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Enter product name"
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-        </div>
+  // const renderBasicInfoStep = () => (
+  //   <div className="space-y-6">
+  //       <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+  //       <div>
+  //         <label className="block text-sm font-medium text-gray-700 mb-2">
+  //           Product Name *
+  //         </label>
+  //         <input
+  //           type="text"
+  //           value={formData.name}
+  //           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+  //           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+  //           placeholder="Enter product name"
+  //         />
+  //         {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+  //       </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Enter product description"
-          />
-          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
-        </div>
+  //       <div>
+  //         <label className="block text-sm font-medium text-gray-700 mb-2">
+  //           Description *
+  //         </label>
+  //         <textarea
+  //           value={formData.description}
+  //           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+  //           rows={4}
+  //           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+  //           placeholder="Enter product description"
+  //         />
+  //         {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+  //       </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category *
-            </label>
-            <input
-              type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Enter category"
-            />
-            {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
-          </div>
+  //       <div className="grid grid-cols-2 gap-4">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2">
+  //             Category *
+  //           </label>
+  //           <input
+  //             type="text"
+  //             value={formData.category}
+  //             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+  //             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+  //             placeholder="Enter category"
+  //           />
+  //           {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+  //         </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sub Category
-            </label>
-            <input
-              type="text"
-              value={formData.subCategory}
-              onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Enter sub category (optional)"
-            />
-          </div>
-        </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2">
+  //             Sub Category
+  //           </label>
+  //           <input
+  //             type="text"
+  //             value={formData.subCategory}
+  //             onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
+  //             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+  //             placeholder="Enter sub category (optional)"
+  //           />
+  //         </div>
+  //       </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Brand *
-          </label>
-          <input
-            type="text"
-            value={formData.brand}
-            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Enter brand name"
-          />
-          {errors.brand && <p className="mt-1 text-sm text-red-600">{errors.brand}</p>}
-        </div>
-      </div>
-  );
+  //       <div>
+  //         <label className="block text-sm font-medium text-gray-700 mb-2">
+  //           Brand *
+  //         </label>
+  //         <input
+  //           type="text"
+  //           value={formData.brand}
+  //           onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+  //           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+  //           placeholder="Enter brand name"
+  //         />
+  //         {errors.brand && <p className="mt-1 text-sm text-red-600">{errors.brand}</p>}
+  //       </div>
+  //     </div>
+  // );
 
-  const renderImagesStep = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {formData.images.map((imageUrl, index) => (
-          <div key={index} className="relative group">
-            <div className="aspect-square relative overflow-hidden rounded-lg">
-              <Image
-                src={imageUrl}
-                alt={`Product image ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <label className="cursor-pointer p-2 bg-white rounded-full hover:bg-gray-100">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => handleImageUpload(e, index)}
-                  disabled={externalIsUploading || uploadingImage}
-                />
-                <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </label>
-              <button
-                onClick={() => handleImageDelete(index)}
-                disabled={externalIsUploading || uploadingImage}
-                className="p-2 bg-red-500 rounded-full hover:bg-red-600"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ))}
-        {formData.images.length < 5 && (
-          <label className="aspect-square flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleImageUpload}
-              disabled={externalIsUploading || uploadingImage}
-            />
-            <div className="text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="mt-2 block text-sm font-medium text-gray-600">
-                {(externalIsUploading || uploadingImage) ? 'Uploading...' : 'Add Image'}
-              </span>
-            </div>
-          </label>
-        )}
-      </div>
-      <p className="text-sm text-gray-500">
-        Upload up to 5 images. Supported formats: JPEG, PNG, WebP. Maximum size: 5MB per image.
-      </p>
-    </div>
-  );
+  // const renderImagesStep = () => (
+  //   <div className="space-y-6">
+  //     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  //       {formData.images.map((imageUrl, index) => (
+  //         <div key={index} className="relative group">
+  //           <div className="aspect-square relative overflow-hidden rounded-lg">
+  //             <Image
+  //               src={imageUrl}
+  //               alt={`Product image ${index + 1}`}
+  //               fill
+  //               className="object-cover"
+  //             />
+  //           </div>
+  //           <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+  //             <label className="cursor-pointer p-2 bg-white rounded-full hover:bg-gray-100">
+  //               <input
+  //                 type="file"
+  //                 accept="image/jpeg,image/png,image/webp"
+  //                 className="hidden"
+  //                 onChange={(e) => handleImageUpload(e, index)}
+  //                 disabled={externalIsUploading || uploadingImage}
+  //               />
+  //               <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+  //               </svg>
+  //             </label>
+  //             <button
+  //               onClick={() => handleImageDelete(index)}
+  //               disabled={externalIsUploading || uploadingImage}
+  //               className="p-2 bg-red-500 rounded-full hover:bg-red-600"
+  //             >
+  //               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  //               </svg>
+  //             </button>
+  //           </div>
+  //         </div>
+  //       ))}
+  //       {formData.images.length < 5 && (
+  //         <label className="aspect-square flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
+  //           <input
+  //             type="file"
+  //             accept="image/jpeg,image/png,image/webp"
+  //             className="hidden"
+  //             onChange={handleImageUpload}
+  //             disabled={externalIsUploading || uploadingImage}
+  //           />
+  //           <div className="text-center">
+  //             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  //             </svg>
+  //             <span className="mt-2 block text-sm font-medium text-gray-600">
+  //               {(externalIsUploading || uploadingImage) ? 'Uploading...' : 'Add Image'}
+  //             </span>
+  //           </div>
+  //         </label>
+  //       )}
+  //     </div>
+  //     <p className="text-sm text-gray-500">
+  //       Upload up to 5 images. Supported formats: JPEG, PNG, WebP. Maximum size: 5MB per image.
+  //     </p>
+  //   </div>
+  // );
 
   if (currentStep === 1) {
     return (
@@ -416,7 +411,7 @@ export default function ProductFormSteps({
         {/* What's in the Box */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            What's in the Box *
+            What&apos;`s in the Box *
           </label>
           {formData.whatsInTheBox.map((item, index) => (
             <div key={index} className="flex gap-2 mb-2">

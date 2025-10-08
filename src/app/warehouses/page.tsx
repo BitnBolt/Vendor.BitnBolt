@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface PickupAddress {
@@ -45,21 +45,10 @@ export default function WarehousesPage() {
     landmark: '',
   });
 
-  useEffect(() => {
-    checkSessionAndLoadPickupAddress();
-  }, []);
-
-  // Auto-show form if no pickup address is set
-  useEffect(() => {
-    if (!isLoading && !hasPickupAddress) {
-      setShowAddForm(true);
-    }
-  }, [isLoading, hasPickupAddress]);
-
-  const checkSessionAndLoadPickupAddress = async () => {
+  const checkSessionAndLoadPickupAddress = useCallback(async () => {
     try {
       const token = localStorage.getItem('vendorToken');
-      
+
       if (!token) {
         router.push('/auth/signin');
         return;
@@ -85,7 +74,18 @@ export default function WarehousesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+  useEffect(() => {
+    checkSessionAndLoadPickupAddress();
+  }, [checkSessionAndLoadPickupAddress]);
+
+  // Auto-show form if no pickup address is set
+  useEffect(() => {
+    if (!isLoading && !hasPickupAddress) {
+      setShowAddForm(true);
+    }
+  }, [isLoading, hasPickupAddress]);
+
 
   const loadPickupAddress = async () => {
     try {
@@ -185,8 +185,8 @@ export default function WarehousesPage() {
                 Pickup Address
               </h1>
               <p className="text-gray-600 mt-2 text-base sm:text-lg">
-                {hasPickupAddress 
-                  ? 'Your pickup address for order fulfillment' 
+                {hasPickupAddress
+                  ? 'Your pickup address for order fulfillment'
                   : 'Set your pickup address to start receiving orders'
                 }
               </p>
@@ -195,11 +195,10 @@ export default function WarehousesPage() {
         </div>
 
         {message.content && (
-          <div className={`mb-6 p-4 rounded-xl shadow-lg transform transition-all duration-300 ${
-            message.type === 'success' 
-              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700' 
+          <div className={`mb-6 p-4 rounded-xl shadow-lg transform transition-all duration-300 ${message.type === 'success'
+              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700'
               : 'bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700'
-          }`}>
+            }`}>
             <div className="flex items-center">
               {message.type === 'success' ? (
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -445,7 +444,7 @@ export default function WarehousesPage() {
                         <p className="text-xs text-gray-400">Cannot be modified once set</p>
                       </div>
                     </div>
-                    
+
                     <div className="text-gray-600 space-y-2 text-sm sm:text-base">
                       <p className="flex items-start">
                         <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

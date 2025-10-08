@@ -308,7 +308,7 @@ export default function ProductDetailsPage() {
 
           {/* What's in the Box */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">What's in the Box</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">What&apos;s in the Box</h2>
             <ul className="list-disc list-inside space-y-2">
               {product.whatsInTheBox.map((item, index) => (
                 <li key={index} className="text-gray-600">{item}</li>
