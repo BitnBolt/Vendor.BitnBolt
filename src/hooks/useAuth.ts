@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function useAuth() {
@@ -16,20 +16,20 @@ export function useAuth() {
     setLoading(false);
   }, [router]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('vendorToken');
     router.push('/auth/signin');
-  };
+  }, [router]);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('vendorToken');
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     };
-  };
+  }, []);
 
-  const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  const makeAuthenticatedRequest = useCallback(async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('vendorToken');
     if (!token) {
       router.push('/auth/signin');
@@ -52,7 +52,7 @@ export function useAuth() {
     }
 
     return response;
-  };
+  }, [router]);
 
   return {
     isAuthenticated,
