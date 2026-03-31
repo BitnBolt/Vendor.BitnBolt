@@ -37,6 +37,11 @@ const defaultFormData: ProductFormData = {
     returnWindow: 7,
     returnConditions: [''],
   },
+  replacePolicy: {
+    isReplaceable: false,
+    replaceWindow: 7,
+    replaceConditions: [''],
+  },
   isPublished: false,
 };
 
@@ -158,6 +163,10 @@ export default function AddProductPage() {
         returnPolicy: {
           ...formData.returnPolicy,
           returnConditions: formData.returnPolicy.returnConditions.filter(c => c.trim()),
+        },
+        replacePolicy: {
+          ...formData.replacePolicy,
+          replaceConditions: formData.replacePolicy.replaceConditions.filter(c => c.trim()),
         },
       };
 

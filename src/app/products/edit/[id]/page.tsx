@@ -38,6 +38,11 @@ const initialFormData: ProductFormData = {
     returnWindow: 7,
     returnConditions: [''],
   },
+  replacePolicy: {
+    isReplaceable: false,
+    replaceWindow: 7,
+    replaceConditions: [''],
+  },
 };
 
 export default function EditProductPage() {
@@ -112,6 +117,10 @@ export default function EditProductPage() {
         returnPolicy: {
           ...formData.returnPolicy,
           returnConditions: formData.returnPolicy.returnConditions.filter(c => c.trim()),
+        },
+        replacePolicy: {
+          ...formData.replacePolicy,
+          replaceConditions: formData.replacePolicy.replaceConditions.filter(c => c.trim()),
         },
       };
 

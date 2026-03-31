@@ -29,6 +29,11 @@ export interface ProductFormData {
     returnWindow: number;
     returnConditions: string[];
   };
+  replacePolicy: {
+    isReplaceable: boolean;
+    replaceWindow: number;
+    replaceConditions: string[];
+  };
   isPublished: boolean;
 }
 

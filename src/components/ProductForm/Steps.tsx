@@ -916,6 +916,112 @@ export default function ProductFormSteps({
             </>
           )}
         </div>
+        
+        {/* Replace Policy */}
+        <div className="mt-8">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Replace Policy</h3>
+          
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="isReplaceable"
+              checked={formData.replacePolicy?.isReplaceable || false}
+              onChange={(e) => setFormData({
+                ...formData,
+                replacePolicy: {
+                  ...formData.replacePolicy,
+                  isReplaceable: e.target.checked,
+                  // Ensure defaults if it was previously undefined
+                  replaceWindow: formData.replacePolicy?.replaceWindow || 7,
+                  replaceConditions: formData.replacePolicy?.replaceConditions || [''],
+                },
+              })}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isReplaceable" className="ml-2 block text-sm text-gray-700">
+              Allow replacement for this product
+            </label>
+          </div>
+
+          {formData.replacePolicy?.isReplaceable && (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Replace Window (days)
+                </label>
+                <input
+                  type="number"
+                  value={formData.replacePolicy.replaceWindow}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    replacePolicy: {
+                      ...formData.replacePolicy,
+                      replaceWindow: parseInt(e.target.value),
+                    },
+                  })}
+                  min="1"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Replace Conditions
+                </label>
+                {formData.replacePolicy.replaceConditions.map((condition, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={condition}
+                      onChange={(e) => {
+                        const newConditions = [...formData.replacePolicy.replaceConditions];
+                        newConditions[index] = e.target.value;
+                        setFormData({
+                          ...formData,
+                          replacePolicy: {
+                            ...formData.replacePolicy,
+                            replaceConditions: newConditions,
+                          },
+                        });
+                      }}
+                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Enter replace condition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newConditions = formData.replacePolicy.replaceConditions.filter((_, i) => i !== index);
+                        setFormData({
+                          ...formData,
+                          replacePolicy: {
+                            ...formData.replacePolicy,
+                            replaceConditions: newConditions.length ? newConditions : [''],
+                          },
+                        });
+                      }}
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setFormData({
+                    ...formData,
+                    replacePolicy: {
+                      ...formData.replacePolicy,
+                      replaceConditions: [...(formData.replacePolicy.replaceConditions || []), ''],
+                    },
+                  })}
+                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-700"
+                >
+                  + Add Condition
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
