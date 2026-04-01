@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { FaHome, FaBoxOpen, FaTruck, FaChartBar, FaCreditCard, FaUsers, FaBuilding, FaCog, FaShoppingBag, FaBars, FaUser } from "react-icons/fa";
+import { FaHome, FaBoxOpen, FaTruck, FaChartBar, FaCreditCard, FaUsers, FaBuilding, FaCog, FaShoppingBag, FaBars, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { signOut } from "next-auth/react";
 
 const sidebarLinks = [
   {
@@ -94,6 +95,13 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               onClick={() => setSidebarOpen(false)}
             />
           ))}
+          <button
+            onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+            className="mt-auto flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group hover:bg-red-600 hover:text-white text-gray-200 w-full"
+          >
+            <span className="text-lg group-hover:text-white"><FaSignOutAlt size={18} /></span>
+            <span className="flex-1 text-base text-left">Logout</span>
+          </button>
         </nav>
       </aside>
       {/* Overlay for mobile */}
