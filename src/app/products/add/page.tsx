@@ -48,61 +48,46 @@ const defaultFormData: ProductFormData = {
 export default function AddProductPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<ProductFormData>(defaultFormData);
-  const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<ProductFormErrors>({});
   const [isUploading, setIsUploading] = useState(false);
 
-  const validateStep = (step: number): boolean => {
+  const validateForm = (): boolean => {
     const newErrors: ProductFormErrors = {};
 
-    switch (step) {
-      case 1:
-        if (!formData.name) newErrors.name = 'Product name is required';
-        if (!formData.description) newErrors.description = 'Description is required';
-        if (!formData.category) newErrors.category = 'Category is required';
-        if (!formData.brand) newErrors.brand = 'Brand is required';
-        break;
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.category.trim()) newErrors.category = 'Category is required';
+    if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
 
-      case 2:
-        if (formData.basePrice <= 0) newErrors.basePrice = 'Base price must be greater than 0';
-        if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
-        if (formData.minimumOrderQuantity < 1) newErrors.minimumOrderQuantity = 'Minimum order quantity must be at least 1';
-        break;
+    if (formData.basePrice <= 0) newErrors.basePrice = 'Base price must be greater than 0';
+    if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
+    if (formData.minimumOrderQuantity < 1) {
+      newErrors.minimumOrderQuantity = 'Minimum order quantity must be at least 1';
+    }
 
-      case 3:
-        if (!formData.whatsInTheBox.some(item => item.trim())) {
-          newErrors.whatsInTheBox = 'At least one item is required';
-        }
-        if (!formData.aboutItem.some(item => item.trim())) {
-          newErrors.aboutItem = 'At least one detail is required';
-        }
-        break;
+    if (!formData.whatsInTheBox.some((item) => item.trim())) {
+      newErrors.whatsInTheBox = 'At least one item is required';
+    }
+    if (!formData.aboutItem.some((item) => item.trim())) {
+      newErrors.aboutItem = 'At least one detail is required';
+    }
 
-      case 4:
-        if (formData.images.length === 0) {
-          newErrors.images = 'At least one image is required';
-        }
-        break;
+    if (formData.images.length === 0) {
+      newErrors.images = 'At least one image is required';
+    }
 
-      case 5:
-        if (!formData.shippingInfo.weight) {
-          newErrors.shippingInfo = 'Weight is required';
-        }
-        break;
+    if (formData.shippingInfo.weight <= 0) {
+      newErrors.shippingInfo = 'Weight must be greater than 0';
+    } else if (
+      !formData.shippingInfo.dimensions.length ||
+      !formData.shippingInfo.dimensions.width ||
+      !formData.shippingInfo.dimensions.height
+    ) {
+      newErrors.shippingInfo = 'Length, width, and height are required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    setCurrentStep(prev => prev - 1);
   };
 
   // Handle image upload
@@ -147,7 +132,8 @@ export default function AddProductPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(currentStep)) {
+    if (!validateForm()) {
+      toast.error('Please fix the highlighted fields');
       return;
     }
 
@@ -194,47 +180,38 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Add New Product</h1>
-        <p className="text-gray-600">Fill in the details to create a new product</p>
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Add product</h1>
+          <p className="text-sm text-gray-600">All fields on one page — scroll to review before publishing.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="shrink-0 px-5 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm"
+        >
+          Create product
+        </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
         <ProductFormSteps
           formData={formData}
           setFormData={setFormData}
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
           errors={errors}
           handleImageUpload={handleImageUpload}
           isUploading={isUploading}
         />
 
-        <div className="flex justify-between mt-8">
-          {currentStep > 1 && (
-            <button
-              onClick={handlePrevious}
-              className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
-            >
-              Previous
-            </button>
-          )}
-          {currentStep < 5 ? (
-            <button
-              onClick={handleNext}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 ml-auto"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 ml-auto"
-            >
-              Create Product
-            </button>
-          )}
+        <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="px-5 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Create product
+          </button>
         </div>
       </div>
     </div>

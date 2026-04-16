@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import ProductFormSteps from '@/components/ProductForm/Steps';
-import { ProductFormData } from '@/components/ProductForm/types';
+import { ProductFormData, ProductFormErrors } from '@/components/ProductForm/types';
 
 const initialFormData: ProductFormData = {
   name: '',
@@ -51,9 +51,8 @@ export default function EditProductPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
+  const [errors, setErrors] = useState<ProductFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch product data
@@ -98,8 +97,8 @@ export default function EditProductPage() {
   // Handle form submission
   const handleSubmit = async () => {
     try {
-      if (!validateStep(currentStep)) {
-        toast.error('Please fix the errors before submitting');
+      if (!validateForm()) {
+        toast.error('Please fix the highlighted fields');
         return;
       }
 
@@ -225,53 +224,41 @@ export default function EditProductPage() {
     }
   };
 
-  // Validation function
-  const validateStep = (step: number): boolean => {
-    const newErrors: Partial<Record<keyof ProductFormData, string>> = {};
+  const validateForm = (): boolean => {
+    const newErrors: ProductFormErrors = {};
 
-    switch (step) {
-      case 1:
-        if (!formData.name.trim()) newErrors.name = 'Name is required';
-        if (!formData.description.trim()) newErrors.description = 'Description is required';
-        if (!formData.category.trim()) newErrors.category = 'Category is required';
-        if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
-        break;
-      case 2:
-        if (formData.basePrice <= 0) newErrors.basePrice = 'Base price must be greater than 0';
-        if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
-        if (formData.minimumOrderQuantity < 1) newErrors.minimumOrderQuantity = 'Minimum order quantity must be at least 1';
-        break;
-      case 3:
-        if (!formData.whatsInTheBox.some(item => item.trim())) newErrors.whatsInTheBox = 'At least one item is required';
-        if (!formData.aboutItem.some(item => item.trim())) newErrors.aboutItem = 'At least one item is required';
-        break;
-      case 4:
-        if (formData.images.length === 0) newErrors.images = 'At least one image is required';
-        break;
-      case 5:
-        if (formData.shippingInfo.weight <= 0) newErrors.shippingInfo = 'Weight must be greater than 0';
-        if (!formData.shippingInfo.dimensions.length || 
-            !formData.shippingInfo.dimensions.width || 
-            !formData.shippingInfo.dimensions.height) {
-          newErrors.shippingInfo = 'All dimensions are required';
-        }
-        break;
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.category.trim()) newErrors.category = 'Category is required';
+    if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
+
+    if (formData.basePrice <= 0) newErrors.basePrice = 'Base price must be greater than 0';
+    if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
+    if (formData.minimumOrderQuantity < 1) {
+      newErrors.minimumOrderQuantity = 'Minimum order quantity must be at least 1';
+    }
+
+    if (!formData.whatsInTheBox.some((item) => item.trim())) {
+      newErrors.whatsInTheBox = 'At least one item is required';
+    }
+    if (!formData.aboutItem.some((item) => item.trim())) {
+      newErrors.aboutItem = 'At least one detail is required';
+    }
+
+    if (formData.images.length === 0) newErrors.images = 'At least one image is required';
+
+    if (formData.shippingInfo.weight <= 0) {
+      newErrors.shippingInfo = 'Weight must be greater than 0';
+    } else if (
+      !formData.shippingInfo.dimensions.length ||
+      !formData.shippingInfo.dimensions.width ||
+      !formData.shippingInfo.dimensions.height
+    ) {
+      newErrors.shippingInfo = 'Length, width, and height are required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 5));
-    } else {
-      toast.error('Please fix the errors before proceeding');
-    }
-  };
-
-  const handlePrevious = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
   if (isLoading) {
@@ -286,42 +273,45 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8 flex justify-between items-center">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Edit Product</h1>
-          <p className="text-gray-600">Step {currentStep} of 5</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Edit product</h1>
+          <p className="text-sm text-gray-600">Update any section below, then save.</p>
         </div>
-        <button
-          onClick={handleDelete}
-          disabled={isSubmitting}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-        >
-          Delete Product
-        </button>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="h-2 bg-gray-200 rounded-full">
-          <div 
-            className="h-2 bg-indigo-600 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / 5) * 100}%` }}
-          ></div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-5 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Saving…
+              </>
+            ) : (
+              'Save changes'
+            )}
+          </button>
         </div>
       </div>
 
       {submitError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{submitError}</p>
-        </div>
+        <div className="mb-4 p-3 text-sm bg-red-50 border border-red-200 rounded-lg text-red-700">{submitError}</div>
       )}
 
-      {/* Form Steps */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
         <ProductFormSteps
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
           formData={formData}
           setFormData={setFormData}
           errors={errors}
@@ -330,42 +320,24 @@ export default function EditProductPage() {
           isEditing={true}
           productId={params.id as string}
         />
-      </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={handlePrevious}
-          disabled={currentStep === 1 || isSubmitting}
-          className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-        >
-          Previous
-        </button>
-
-        {currentStep < 5 ? (
+        <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
           <button
-            onClick={handleNext}
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Next
-          </button>
-        ) : (
-          <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 inline-flex items-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Updating...
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Saving…
               </>
             ) : (
-              'Update Product'
+              'Save changes'
             )}
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
