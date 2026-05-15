@@ -15,10 +15,10 @@ const initialFormData: ProductFormData = {
   basePrice: 0,
   stock: 0,
   minimumOrderQuantity: 1,
-  whatsInTheBox: [''],
-  aboutItem: [''],
-  features: [{ key: '', value: '' }],
-  specifications: [{ key: '', value: '' }],
+  whatsInTheBox: [],
+  aboutItem: [],
+  features: [],
+  specifications: [],
   tags: [],
   images: [],
   profitMargin: 0,
@@ -236,13 +236,6 @@ export default function EditProductPage() {
     if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
     if (formData.minimumOrderQuantity < 1) {
       newErrors.minimumOrderQuantity = 'Minimum order quantity must be at least 1';
-    }
-
-    if (!formData.whatsInTheBox.some((item) => item.trim())) {
-      newErrors.whatsInTheBox = 'At least one item is required';
-    }
-    if (!formData.aboutItem.some((item) => item.trim())) {
-      newErrors.aboutItem = 'At least one detail is required';
     }
 
     if (formData.images.length === 0) newErrors.images = 'At least one image is required';

@@ -307,31 +307,35 @@ export default function ProductDetailsPage() {
           </div>
 
           {/* What's in the Box */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">What&apos;s in the Box</h2>
-            <ul className="list-disc list-inside space-y-2">
-              {product.whatsInTheBox.map((item, index) => (
-                <li key={index} className="text-gray-600">{item}</li>
-              ))}
-            </ul>
-          </div>
+          {product.whatsInTheBox?.some((item) => item.trim()) && (
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">What&apos;s in the Box</h2>
+              <ul className="list-disc list-inside space-y-2">
+                {product.whatsInTheBox.filter((item) => item.trim()).map((item, index) => (
+                  <li key={index} className="text-gray-600">{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* About Item */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">About this Item</h2>
-            <ul className="list-disc list-inside space-y-2">
-              {product.aboutItem.map((item, index) => (
-                <li key={index} className="text-gray-600">{item}</li>
-              ))}
-            </ul>
-          </div>
+          {product.aboutItem?.some((item) => item.trim()) && (
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">About this Item</h2>
+              <ul className="list-disc list-inside space-y-2">
+                {product.aboutItem.filter((item) => item.trim()).map((item, index) => (
+                  <li key={index} className="text-gray-600">{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Features */}
-          {product.features.length > 0 && (
+          {product.features.some((f) => f.key.trim() && f.value.trim()) && (
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Features</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Key Features</h2>
               <div className="grid grid-cols-2 gap-4">
-                {product.features.map((feature, index) => (
+                {product.features.filter((f) => f.key.trim() && f.value.trim()).map((feature, index) => (
                   <div key={index}>
                     <p className="text-sm font-medium text-gray-800">{feature.key}</p>
                     <p className="text-gray-600">{feature.value}</p>
@@ -342,11 +346,11 @@ export default function ProductDetailsPage() {
           )}
 
           {/* Specifications */}
-          {product.specifications.length > 0 && (
+          {product.specifications.some((s) => s.key.trim() && s.value.trim()) && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Specifications</h2>
               <div className="grid grid-cols-2 gap-4">
-                {product.specifications.map((spec, index) => (
+                {product.specifications.filter((s) => s.key.trim() && s.value.trim()).map((spec, index) => (
                   <div key={index}>
                     <p className="text-sm font-medium text-gray-800">{spec.key}</p>
                     <p className="text-gray-600">{spec.value}</p>

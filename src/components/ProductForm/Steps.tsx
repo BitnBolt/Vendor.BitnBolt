@@ -118,9 +118,10 @@ export default function ProductFormSteps({
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
+                  rows={5}
+                  required
                   className={inp}
-                  placeholder="Short description"
+                  placeholder="Describe the product (required)"
                 />
                 {errors.description && <p className="mt-0.5 text-xs text-red-600">{errors.description}</p>}
               </div>
@@ -207,7 +208,7 @@ export default function ProductFormSteps({
             <h2 className={sec}>Details</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className={lbl}>What&apos;s in the box *</label>
+                <label className={lbl}>What&apos;s in the box <span className="text-gray-400 font-normal">(optional)</span></label>
                 {formData.whatsInTheBox.map((item, index) => (
                   <div key={index} className="flex gap-1.5 mb-1.5">
                     <input
@@ -225,7 +226,7 @@ export default function ProductFormSteps({
                       type="button"
                       onClick={() => {
                         const newItems = formData.whatsInTheBox.filter((_, i) => i !== index);
-                        setFormData({ ...formData, whatsInTheBox: newItems.length ? newItems : [''] });
+                        setFormData({ ...formData, whatsInTheBox: newItems });
                       }}
                       className="shrink-0 px-2 text-red-600 hover:bg-red-50 rounded-md text-lg leading-none"
                       aria-label="Remove item"
@@ -241,11 +242,10 @@ export default function ProductFormSteps({
                 >
                   + Add item
                 </button>
-                {errors.whatsInTheBox && <p className="mt-0.5 text-xs text-red-600">{errors.whatsInTheBox}</p>}
               </div>
 
               <div>
-                <label className={lbl}>About this item *</label>
+                <label className={lbl}>About this item <span className="text-gray-400 font-normal">(optional)</span></label>
                 {formData.aboutItem.map((item, index) => (
                   <div key={index} className="flex gap-1.5 mb-1.5">
                     <input
@@ -263,7 +263,7 @@ export default function ProductFormSteps({
                       type="button"
                       onClick={() => {
                         const newItems = formData.aboutItem.filter((_, i) => i !== index);
-                        setFormData({ ...formData, aboutItem: newItems.length ? newItems : [''] });
+                        setFormData({ ...formData, aboutItem: newItems });
                       }}
                       className="shrink-0 px-2 text-red-600 hover:bg-red-50 rounded-md text-lg leading-none"
                       aria-label="Remove detail"
@@ -279,13 +279,12 @@ export default function ProductFormSteps({
                 >
                   + Add detail
                 </button>
-                {errors.aboutItem && <p className="mt-0.5 text-xs text-red-600">{errors.aboutItem}</p>}
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className={lbl}>Features</label>
+                <label className={lbl}>Key features <span className="text-gray-400 font-normal">(optional)</span></label>
                 {formData.features.map((feature, index) => (
                   <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 mb-1.5">
                     <input
@@ -316,7 +315,7 @@ export default function ProductFormSteps({
                         const newFeatures = formData.features.filter((_, i) => i !== index);
                         setFormData({
                           ...formData,
-                          features: newFeatures.length ? newFeatures : [{ key: '', value: '' }],
+                          features: newFeatures,
                         });
                       }}
                       className="px-2 text-red-600 hover:bg-red-50 rounded-md"
@@ -338,7 +337,7 @@ export default function ProductFormSteps({
               </div>
 
               <div>
-                <label className={lbl}>Specifications</label>
+                <label className={lbl}>Specifications <span className="text-gray-400 font-normal">(optional)</span></label>
                 {formData.specifications.map((spec, index) => (
                   <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 mb-1.5">
                     <input
@@ -369,7 +368,7 @@ export default function ProductFormSteps({
                         const newSpecs = formData.specifications.filter((_, i) => i !== index);
                         setFormData({
                           ...formData,
-                          specifications: newSpecs.length ? newSpecs : [{ key: '', value: '' }],
+                          specifications: newSpecs,
                         });
                       }}
                       className="px-2 text-red-600 hover:bg-red-50 rounded-md"
