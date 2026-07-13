@@ -5,19 +5,19 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 
 type OrderItem = {
-  productId: {
-    _id: string;
-    name: string;
-    images: string[];
-    slug: string;
-    description: string;
-  };
-  vendorId: {
+  productId?: {
+    _id?: string;
+    name?: string;
+    images?: string[];
+    slug?: string;
+    description?: string;
+  } | string | null;
+  vendorId?: {
     _id: string;
     businessName: string;
     email: string;
     phone: string;
-  };
+  } | string;
   quantity: number;
   basePrice: number;
 };
@@ -62,11 +62,11 @@ type Order = {
     razorpayOrderId?: string;
     razorpayPaymentId?: string;
   };
-  orderSummary: {
-    itemsTotal: number;
-    shippingCharge: number;
-    tax: number;
-    totalAmount: number;
+  orderSummary?: {
+    itemsTotal?: number;
+    shippingCharge?: number;
+    tax?: number;
+    totalAmount?: number;
   };
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
   statusHistory: Array<{
@@ -97,7 +97,7 @@ type Order = {
     }>;
   };
   createdAt: Date;
-  vendorSubtotal: number;
+  vendorSubtotal?: number;
 };
 
 export default function OrderDetailPage() {
@@ -518,28 +518,37 @@ export default function OrderDetailPage() {
           <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
             <h2 className="text-lg font-semibold mb-4">Order Items</h2>
             <div className="space-y-4">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <Image
-                    src={item.productId.images?.[0] || '/next.svg'}
-                    alt={item.productId.name}
-                    width={80}
-                    height={80}
-                    className="rounded object-cover"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.productId.name}</h3>
-                    <p className="text-sm text-gray-500 mb-2">{item.productId.description}</p>
-                    <div className="flex gap-4 text-sm">
-                      <span>Qty: {item.quantity}</span>
-                      <span>Price: ₹{item.basePrice}</span>
+              {order.items.map((item, index) => {
+                const product =
+                  item.productId && typeof item.productId === 'object' ? item.productId : null;
+                const name = product?.name || 'Product';
+                const image = product?.images?.[0] || '/next.svg';
+                const line = (Number(item.basePrice) || 0) * (Number(item.quantity) || 0);
+                return (
+                  <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <Image
+                      src={image}
+                      alt={name}
+                      width={80}
+                      height={80}
+                      className="rounded object-cover"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium">{name}</h3>
+                      {product?.description && (
+                        <p className="text-sm text-gray-500 mb-2">{product.description}</p>
+                      )}
+                      <div className="flex gap-4 text-sm">
+                        <span>Qty: {item.quantity || 0}</span>
+                        <span>Price: ₹{Number(item.basePrice || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-lg">₹{line.toFixed(2)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-lg">₹{(item.basePrice * item.quantity).toFixed(2)}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -547,7 +556,7 @@ export default function OrderDetailPage() {
           <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
             <h2 className="text-lg font-semibold mb-4">Status History</h2>
             <div className="space-y-3">
-              {order.statusHistory.map((history, index) => (
+              {(order.statusHistory || []).map((history, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
                   <div className={`w-3 h-3 rounded-full ${getStatusColor(history.status).replace('bg-', 'bg-').replace('text-', '')}`}></div>
                   <div className="flex-1">
@@ -572,19 +581,23 @@ export default function OrderDetailPage() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>₹{order.orderSummary.itemsTotal.toFixed(2)}</span>
+                <span>₹{Number(order.orderSummary?.itemsTotal ?? order.vendorSubtotal ?? 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>{order.orderSummary.shippingCharge === 0 ? 'Free' : `₹${order.orderSummary.shippingCharge.toFixed(2)}`}</span>
+                <span>
+                  {!order.orderSummary?.shippingCharge
+                    ? 'Free'
+                    : `₹${Number(order.orderSummary.shippingCharge).toFixed(2)}`}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Tax (GST)</span>
-                <span>₹{order.orderSummary.tax.toFixed(2)}</span>
+                <span>₹{Number(order.orderSummary?.tax ?? 0).toFixed(2)}</span>
               </div>
               <div className="border-t pt-3 flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>₹{order.orderSummary.totalAmount.toFixed(2)}</span>
+                <span>₹{Number(order.orderSummary?.totalAmount ?? order.vendorSubtotal ?? 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -595,7 +608,7 @@ export default function OrderDetailPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Method</span>
-                <span className="font-medium">{order.paymentDetails.method.toUpperCase()}</span>
+                <span className="font-medium">{(order.paymentDetails?.method || '—').toString().toUpperCase()}</span>
               </div>
               <div className="flex justify-between">
                 <span>Status</span>

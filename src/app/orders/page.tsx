@@ -5,13 +5,13 @@ import Image from 'next/image';
 import { useAuth } from '../../hooks/useAuth';
 
 type OrderItem = {
-  productId: {
-    _id: string;
-    name: string;
-    images: string[];
-    slug: string;
-  };
-  vendorId: string;
+  productId?: {
+    _id?: string;
+    name?: string;
+    images?: string[];
+    slug?: string;
+  } | string | null;
+  vendorId?: string;
   quantity: number;
   basePrice: number;
 };
@@ -19,48 +19,59 @@ type OrderItem = {
 type Order = {
   _id: string;
   orderId: string;
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-    phoneNumber: string;
-  };
+  userId?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    phoneNumber?: string;
+  } | null;
   items: OrderItem[];
-  shippingAddress: {
-    fullName: string;
-    phoneNumber: string;
-    addressLine1: string;
+  shippingAddress?: {
+    fullName?: string;
+    phoneNumber?: string;
+    addressLine1?: string;
     addressLine2?: string;
-    city: string;
-    state: string;
-    pincode: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
     landmark?: string;
   };
-  paymentDetails: {
-    method: 'cod' | 'online';
-    status: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentDetails?: {
+    method?: 'cod' | 'online';
+    status?: 'pending' | 'paid' | 'failed' | 'refunded';
   };
-  orderSummary: {
-    itemsTotal: number;
-    shippingCharge: number;
-    tax: number;
-    totalAmount: number;
+  orderSummary?: {
+    itemsTotal?: number;
+    shippingCharge?: number;
+    tax?: number;
+    totalAmount?: number;
   };
+  vendorSubtotal?: number;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
-  statusHistory: Array<{
-    status: string;
-    comment?: string;
-    updatedBy?: string;
-    timestamp: Date;
-  }>;
-  deliveryDetails: {
-    provider?: string;
-    trackingId?: string;
-    awbCode?: string;
-    courierName?: string;
-  };
-  createdAt: Date;
+  createdAt: Date | string;
 };
+
+function productName(item: OrderItem) {
+  if (!item.productId || typeof item.productId === 'string') return 'Product';
+  return item.productId.name || 'Product';
+}
+
+function productImage(item: OrderItem) {
+  if (!item.productId || typeof item.productId === 'string') return '/next.svg';
+  return item.productId.images?.[0] || '/next.svg';
+}
+
+function lineTotal(item: OrderItem) {
+  const base = Number(item.basePrice) || 0;
+  const qty = Number(item.quantity) || 0;
+  return base * qty;
+}
+
+function orderTotal(order: Order) {
+  if (typeof order.vendorSubtotal === 'number') return order.vendorSubtotal;
+  if (typeof order.orderSummary?.totalAmount === 'number') return order.orderSummary.totalAmount;
+  return (order.items || []).reduce((sum, item) => sum + lineTotal(item), 0);
+}
 
 export default function OrdersPage() {
   const { isAuthenticated, loading: authLoading, makeAuthenticatedRequest } = useAuth();
@@ -92,7 +103,7 @@ export default function OrdersPage() {
       }
 
       const data = await res.json();
-      setOrders(data.orders || []);
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
       setTotalPages(data.pagination?.pages || 1);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
@@ -100,13 +111,12 @@ export default function OrdersPage() {
       setLoading(false);
     }
   }, [currentPage, filterStatus, makeAuthenticatedRequest]);
-  // Fetch orders
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchOrders();
     }
   }, [isAuthenticated, currentPage, filterStatus, fetchOrders]);
-
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -114,7 +124,7 @@ export default function OrdersPage() {
         method: 'PATCH',
         body: JSON.stringify({
           status: newStatus,
-          comment: `Status updated to ${newStatus}`
+          comment: `Status updated to ${newStatus}`,
         }),
       });
 
@@ -123,7 +133,6 @@ export default function OrdersPage() {
         throw new Error(errorData.message || 'Failed to update order');
       }
 
-      // Refresh orders
       await fetchOrders();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to update order status');
@@ -132,14 +141,22 @@ export default function OrdersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'processing': return 'bg-purple-100 text-purple-800';
-      case 'shipped': return 'bg-indigo-100 text-indigo-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'returned': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed':
+        return 'bg-blue-100 text-blue-800';
+      case 'processing':
+        return 'bg-purple-100 text-purple-800';
+      case 'shipped':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'returned':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -182,41 +199,43 @@ export default function OrdersPage() {
       {loading ? (
         <div className="text-gray-500">Loading orders...</div>
       ) : orders.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          No orders found
-        </div>
+        <div className="text-gray-500 text-center py-8">No orders found</div>
       ) : (
         <div className="space-y-6">
           {orders.map((order) => (
             <div key={order._id} className="bg-white rounded-lg shadow border border-gray-200 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">
-                    Order #{order.orderId}
-                  </h3>
+                  <h3 className="text-lg font-semibold">Order #{order.orderId}</h3>
                   <p className="text-sm text-gray-500">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '—'}
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}
+                >
+                  {(order.status || 'unknown').charAt(0).toUpperCase() +
+                    (order.status || 'unknown').slice(1)}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
                   <h4 className="font-medium mb-2">Customer Details</h4>
-                  <p className="text-sm">{order.userId.name}</p>
-                  <p className="text-sm text-gray-500">{order.userId.email}</p>
-                  <p className="text-sm text-gray-500">{order.userId.phoneNumber}</p>
+                  <p className="text-sm">{order.userId?.name || '—'}</p>
+                  <p className="text-sm text-gray-500">{order.userId?.email || '—'}</p>
+                  <p className="text-sm text-gray-500">{order.userId?.phoneNumber || '—'}</p>
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">Shipping Address</h4>
-                  <p className="text-sm">{order.shippingAddress.fullName}</p>
-                  <p className="text-sm">{order.shippingAddress.addressLine1}</p>
+                  <p className="text-sm">{order.shippingAddress?.fullName || '—'}</p>
+                  <p className="text-sm">{order.shippingAddress?.addressLine1 || '—'}</p>
                   <p className="text-sm">
-                    {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                    {[order.shippingAddress?.city, order.shippingAddress?.state]
+                      .filter(Boolean)
+                      .join(', ')}
+                    {order.shippingAddress?.pincode ? ` - ${order.shippingAddress.pincode}` : ''}
                   </p>
                 </div>
               </div>
@@ -224,20 +243,20 @@ export default function OrdersPage() {
               <div className="mb-4">
                 <h4 className="font-medium mb-2">Order Items</h4>
                 <div className="space-y-2">
-                  {order.items.map((item, index) => (
+                  {(order.items || []).map((item, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
                       <Image
-                        src={item.productId.images?.[0] || '/next.svg'}
-                        alt={item.productId.name}
+                        src={productImage(item)}
+                        alt={productName(item)}
                         width={50}
                         height={50}
                         className="rounded object-cover"
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{item.productId.name}</p>
-                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                        <p className="font-medium">{productName(item)}</p>
+                        <p className="text-sm text-gray-500">Qty: {item.quantity || 0}</p>
                       </div>
-                      <p className="font-semibold">₹{(item.basePrice * item.quantity).toFixed(2)}</p>
+                      <p className="font-semibold">₹{lineTotal(item).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
@@ -245,8 +264,10 @@ export default function OrdersPage() {
 
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-sm text-gray-500">Payment: {order.paymentDetails.method.toUpperCase()}</p>
-                  <p className="text-sm text-gray-500">Total: ₹{order.orderSummary.totalAmount.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">
+                    Payment: {(order.paymentDetails?.method || '—').toString().toUpperCase()}
+                  </p>
+                  <p className="text-sm text-gray-500">Total: ₹{orderTotal(order).toFixed(2)}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -279,11 +300,10 @@ export default function OrdersPage() {
             </div>
           ))}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-8">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -295,7 +315,7 @@ export default function OrdersPage() {
               </span>
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -307,4 +327,4 @@ export default function OrdersPage() {
       )}
     </div>
   );
-} 
+}
