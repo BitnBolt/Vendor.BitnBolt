@@ -60,6 +60,8 @@ type Order = {
     status: 'pending' | 'paid' | 'failed' | 'refunded';
     transactionId?: string;
     paidAt?: Date;
+    cashfreeOrderId?: string;
+    cashfreePaymentId?: string;
     razorpayOrderId?: string;
     razorpayPaymentId?: string;
   };
