@@ -20,9 +20,6 @@ type OrderItem = {
   };
   quantity: number;
   basePrice: number;
-  profitMargin: number;
-  discount: number;
-  finalPrice: number;
 };
 
 type Order = {
@@ -535,12 +532,11 @@ export default function OrderDetailPage() {
                     <p className="text-sm text-gray-500 mb-2">{item.productId.description}</p>
                     <div className="flex gap-4 text-sm">
                       <span>Qty: {item.quantity}</span>
-                      <span>Base Price: ₹{item.basePrice}</span>
-                      <span>Final Price: ₹{item.finalPrice}</span>
+                      <span>Price: ₹{item.basePrice}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-lg">₹{(item.finalPrice * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold text-lg">₹{(item.basePrice * item.quantity).toFixed(2)}</p>
                   </div>
                 </div>
               ))}

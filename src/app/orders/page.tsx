@@ -14,9 +14,6 @@ type OrderItem = {
   vendorId: string;
   quantity: number;
   basePrice: number;
-  profitMargin: number;
-  discount: number;
-  finalPrice: number;
 };
 
 type Order = {
@@ -240,7 +237,7 @@ export default function OrdersPage() {
                         <p className="font-medium">{item.productId.name}</p>
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold">₹{(item.finalPrice * item.quantity).toFixed(2)}</p>
+                      <p className="font-semibold">₹{(item.basePrice * item.quantity).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>

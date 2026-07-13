@@ -19,9 +19,6 @@ interface Product {
   tags: string[];
   images: string[];
   basePrice: number;
-  finalPrice: number;
-  profitMargin: number;
-  discount: number;
   stock: number;
   minimumOrderQuantity: number;
   isPublished: boolean;
@@ -252,20 +249,8 @@ export default function ProductDetailsPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing & Stock</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Base Price</p>
+                <p className="text-sm text-gray-600">Your price</p>
                 <p className="text-lg font-semibold">₹{product.basePrice}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Final Price</p>
-                <p className="text-lg font-semibold">₹{product.finalPrice}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Profit Margin</p>
-                <p className="text-lg font-semibold">{product.profitMargin}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Discount</p>
-                <p className="text-lg font-semibold">{product.discount}%</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Stock</p>

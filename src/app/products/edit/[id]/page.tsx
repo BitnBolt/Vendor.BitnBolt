@@ -21,9 +21,6 @@ const initialFormData: ProductFormData = {
   specifications: [],
   tags: [],
   images: [],
-  profitMargin: 0,
-  discount: 0,
-  finalPrice: 0,
   isPublished: false,
   shippingInfo: {
     weight: 0,

@@ -36,7 +36,7 @@ type RecentOrder = {
   items: Array<{
     productId: string;
     quantity: number;
-    finalPrice: number;
+    basePrice: number;
   }>;
 };
 
@@ -243,7 +243,7 @@ export default function AnalyticsPage() {
                       <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
                         <span>Payment: {order.paymentStatus || 'N/A'}</span>
                         <span className="font-semibold">
-                          {currencyFormatter.format(order.totalAmount || order.items.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0))}
+                          {currencyFormatter.format(order.totalAmount || order.items.reduce((sum, item) => sum + item.basePrice * item.quantity, 0))}
                         </span>
                       </div>
                     </div>

@@ -5,9 +5,6 @@ export interface ProductFormData {
   subCategory?: string;
   brand: string;
   basePrice: number;
-  profitMargin: number;
-  discount: number;
-  finalPrice: number;
   stock: number;
   minimumOrderQuantity: number;
   images: string[];
